@@ -7,36 +7,31 @@ import {
   registerUser,
   updateUserById,
 } from "../controllers/user.controller.js";
-import middelware from "../middleware/authMiddleware.js";
+import checkMiddleware from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
 router.post("/register", registerUser);
-
 router.post("/login", login);
 
-router.get(
-  "/admin",
-  middelware(["admin"], (req, res) => {
-    res.send("Welcome to the admin panel.");
-  })
-);
+router.get("/admin", checkMiddleware, (req, res) => {
+  res.send("Welcome to the admin panel.");
+});
 
-router.get("/user", middelware(["user", "admin"]), (req, res) => {
+router.get("/user", checkMiddleware, (req, res) => {
   res.send("Welcome to the user area.");
 });
 
-router.get(
-  "/superadmin",
-  middelware(["superadmin"], (req, res) => {
-    res.send("Welcome to the superadmin panel.");
-  })
-);
+router.get("/superadmin", checkMiddleware, (req, res) => {
+  const uriTest = req.baseUrl;
 
-router.get("/users", middelware(["admin", "superadmin"]), getAllUsers);
-router.get("/user/:id", middelware(["admin", "superadmin"]), getUserById);
-router.get("/admin/data", middelware(["superadmin"]), getAdminData);
+  res.send(uriTest);
+});
 
-router.put("/user/:id", middelware(["admin", "superadmin"]), updateUserById);
+router.get("/users", checkMiddleware, getAllUsers);
+router.get("/user/:id", checkMiddleware, getUserById);
+router.get("/admin/data", checkMiddleware, getAdminData);
+
+router.put("/user/:id", checkMiddleware, updateUserById);
 
 export default router;

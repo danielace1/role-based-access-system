@@ -1,11 +1,16 @@
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
+import Session from "../models/session.model.js";
 
 export const registerUser = async (req, res) => {
   const { username, email, password, role } = req.body;
-  const hashedpassword = await bcrypt.hash(password, 10);
 
+  const existingUser = await User.findOne({ username, email });
+  if (existingUser) {
+    return res.status(400).json({ message: "Username, email already taken" });
+  }
+
+  const hashedpassword = await bcrypt.hash(password, 10);
   const user = new User({ username, email, password: hashedpassword, role });
   await user.save();
 
@@ -18,13 +23,17 @@ export const login = async (req, res) => {
 
   if (!user) return res.status(404).json({ message: "User not found" });
 
-  const token = jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" }
-  );
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-  res.json({ token: token });
+  const session = await Session.create({ user_id: user._id });
+  const { password: _, ...userInfo } = user.toObject();
+
+  return res.json({
+    token: session._id,
+    user: userInfo,
+    message: "Login successful",
+  });
 };
 
 export const getAllUsers = async (req, res) => {

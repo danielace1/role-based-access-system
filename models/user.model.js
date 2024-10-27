@@ -3,7 +3,7 @@ import validator from "validator";
 
 const userSchema = new mongoose.Schema(
   {
-    username: { type: String, required: true, unique: true },
+    username: { type: String, required: true },
     password: {
       type: String,
       required: true,
@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin", "superadmin"],
+      enum: ["superadmin", "admin", "user"],
       default: "user",
     },
   },
